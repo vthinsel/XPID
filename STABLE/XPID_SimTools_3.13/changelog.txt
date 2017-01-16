@@ -1,0 +1,124 @@
+
+Version 3.0
+-----------
+* Updates: 
+- variables stored in EEPROM. Upon first start, defautl values will be written to EEPROM.
+- LCD management to display motors request, position, xpid. LCD refresh controlled by PIN 11. LCD updates require many cycles, decreasing reactivity of sim.
+- Sabertooth on pin 3
+* To Do:
+- Keypad management to update variables and EEPROM content
+* Issues:
+- 
+
+Version 3.01
+------------
+* Updates: 
+- Added DeadZone and ReadAnalog in EEPROM
+- smart upgrade of EEPROM content based on #define VERSION <version> which is writtena at address 0 of EEPROM
+
+Version 3.02
+------------
+* Updates: 
+- Bugfix
+- LCD update: display version info on boot and EEPROM upgrade info
+  
+Version 3.04
+------------
+* Updates: 
+- strings moved to flash to save memory
+- working menu and keypad
+* To Do:
+- Implement menus actions to update variables
+  
+Version 3.05
+------------
+* Updates: 
+- #define DEBUG added to make code lighter when not debugging over serial port. comment it for production
+- LCD now displays the ms required to run a loop. With LCD: 13ms required. without LCD:3ms- functions re-organized
+- Code cleanup, added comments
+* To Do:
+- Implement menus actions to update variables
+
+Version 3.06
+------------
+* Updates: 
+- Code compatible with mega2560. Uses serial for simengine and serial1 for sabertooth for adruino mega.
+- Added sabertooth type in EEPROM (1=25*2,2=32*2)
+- LCDChangeValInt created to update variable using LCD keypad (needs more tests)
+- bug fixes in display
+* To Do:
+- Test menus actions to update variables
+
+Version 3.07
+------------
+* Updates: 
+- Added in EEPROM standby values for M1 and M2
+- Keypad fixes. BAcklight management (compatible with v1 & v2 shield)
+- Bugfixes in menu navigation
+- Swith to packet serial for more reliable/fast sabertooth management
+- Sabertooth speed set to 115200 if 2*32, 38400 otherwise
+- Serial speed to 115200 if mega260, 19200 with arduino UNO
+
+bug fixes in display
+* To Do:
+- improve serial speed depending on UNO/2560 and 2*23/2*25 (not optimal as of today as UNO+2*32 => 19200 )
+- Test menus actions to update variables
+- Missing double/float eidting through LCD
+
+Version 3.09
+------------
+* Updates: 
+- Sabertooth model selectable through LCD
+- Debug on serial TX2 for mega2560 at 115200 no matter the #define DEBUG statement
+- Sabertooth on serial TX1 for mega 2560 at 115200
+- SimEngine at 115200 onUSB/serial connection on MEga2560
+- Reset EEPROM added in menu, in order to force default values in case of fresh install/failed upgrade
+bug fixes in display
+* To Do:
+- Final tests once sabertooth 2*32 becomes available
+
+
+Version 3.10
+------------
+* Updates: 
+- Refactored some PID/output functions
+- Removed CalculateMotorDirection(): merged and optimized in SetPWM
+- Optimized SetPWM, with better deadzone management
+- Changed debug display of current var
+- some bugfixes
+bug fixes in display
+* To Do:
+- optimize further the PID code
+
+
+Version 3.11
+------------
+* Updates: 
+- Code cleanup and few bugfixes
+- Added license
+- Version released to XSim community
+bug fixes in display
+* To Do:
+- optimize further the PID code
+
+Version 3.12
+------------
+* Updates: 
+- Changing pot min/max and standby value using LCD makes the motors move to the new position for 3 seconds to test the value.
+- LCD refresh every 100ms : more readable, less CPU usage for LCD = more CPU available for XPID calculation.
+- removed FASTADC trick : better conversion with much less noise. As a consequence, no need to read n times and make an average when using FASTADC.
+* To Do:
+
+Version 3.13
+------------
+* Updates:
+- FASTADC is back
+- Implemented a class for motors : code simplification
+- PID calculation in one step
+
+Version 3.14
+------------
+* Updates:
+- LCD replaced by TFT with touchscreen
+
+
