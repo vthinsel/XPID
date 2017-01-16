@@ -100,7 +100,7 @@ Original code from sirnoname and Wanegain
 #define BYTELOW(v)   (*(((unsigned char *) (&v) + 1)))			//Write
 #define BYTEHIGH(v)  (*((unsigned char *) (&v)))
 
-int XPIDVersion = 316;
+int XPIDVersion = 317;
 int DeadZone = 0;
 int ReadAnalog = 0;
 
