@@ -1068,8 +1068,8 @@ void ReadEEValues() { // update variables with content stored in EEPROM
 	M2.setD(EEPROM.readDouble(addrderivative2));
 	M1.setStandby(EEPROM.readInt(addrMotor1STDBY));
 	M2.setStandby(EEPROM.readInt(addrMotor2STDBY));
-	M1.setTarget(EEPROM.readInt(addrMotor1STDBY));
-	M2.setTarget(EEPROM.readInt(addrMotor2STDBY));
+	M1.setTarget(EEPROM.readInt(addrMotor1STDBY)); //Go to home position
+	M2.setTarget(EEPROM.readInt(addrMotor2STDBY)); //Go to home position
 	DeadZone = EEPROM.readInt(addrDeadZone);
 	ReadAnalog = EEPROM.readInt(addrReadAnalog);
 	SabertoothType = EEPROM.readInt(addrSabertoothType);
@@ -1097,7 +1097,7 @@ void PrintEEValues() {
 	DebugSerial.print(F("M1.I\t\t")); DebugSerial.print(addrintegral1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getI())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrintegral1)); DebugSerial.println("");
 	DebugSerial.print(F("M1.D\t\t")); DebugSerial.print(addrderivative1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getD())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrderivative1)); DebugSerial.println("");
 	DebugSerial.print(F("M1.Stdby\t")); DebugSerial.print(addrMotor1STDBY); DebugSerial.print("\t"); DebugSerial.print(sizeof(addrMotor1STDBY)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrMotor1STDBY)); DebugSerial.println("");
-	DebugSerial.print(F("M2.K\t\t")); DebugSerial.print(addrK_motor_2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getK())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrK_motor_1)); DebugSerial.println("");
+	DebugSerial.print(F("M2.K\t\t")); DebugSerial.print(addrK_motor_2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getK())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrK_motor_2)); DebugSerial.println("");
 	DebugSerial.print(F("M2.P\t\t")); DebugSerial.print(addrproportional2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getP())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrproportional2)); DebugSerial.println("");
 	DebugSerial.print(F("M2.I\t\t")); DebugSerial.print(addrintegral2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getI())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrintegral2)); DebugSerial.println("");
 	DebugSerial.print(F("M2.D\t\t")); DebugSerial.print(addrderivative2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getD())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrderivative2)); DebugSerial.println("");
