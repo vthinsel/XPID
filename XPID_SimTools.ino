@@ -101,7 +101,7 @@ POT2 --	 | [ ]A15                              |   Ports:
 #define BYTELOW(v)   (*(((unsigned char *) (&v) + 1)))			//Write
 #define BYTEHIGH(v)  (*((unsigned char *) (&v)))
 
-int XPIDVersion = 320;
+unsigned int XPIDVersion = 320;
 int DeadZone = 0;
 int ReadAnalog = 0;
 
@@ -177,20 +177,20 @@ int SabertoothType = 0;
 
 #define SimEngineSerialPort Serial
 #define SabertoothSerialPort Serial1 //#define SabertoothTXPinSerial Serial1 in case of arduino Mega2560
-//#define DebugSerial Serial2 //Debug output on serial2 TX pin 
-#define DebugSerial Serial //Debug output on serial TX pin
+#define DebugSerial Serial2 //Debug output on serial2 TX pin 
+//#define DebugSerial Serial //Debug output on serial TX pin
 
 Sabertooth ST(128, SabertoothSerialPort); // Create Sabertooth object based on guessed serial port above
 XPIDDCMotor M1;
 XPIDDCMotor M2;
 
 struct Button {            // struct for holding states of our buttons
-	int X;
-	int Y;
-	int width;
-	int height;
-	int bgcol;
-	int textcol;
+	unsigned int X;
+	unsigned int Y;
+	unsigned int width;
+	unsigned int height;
+	unsigned int bgcol;
+	unsigned int textcol;
 	String Label;
 	boolean State;
 	boolean PrevState;
@@ -396,14 +396,14 @@ void setup()
 
 void loop()
 {
-	unsigned long rate = 0;
-	unsigned long pwmrate = 0;
+//	unsigned long rate = 0;
+//	unsigned long pwmrate ;
 	int signal = 0;
 	page = 1;
 	//Program loop
 	while (1 == 1) //Important hack: Use this own real time loop code without arduino framework delays
 	{
-		pwmrate = millis();
+		//pwmrate = millis();
 		FeedbackPotWorker();
 		if ((digitalRead(EmergencyPin) == LOW))
 		{

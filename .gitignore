@@ -8,6 +8,7 @@
 *.sln.docstates
 *.zip
 *.7[zZ]
+ms-persist.xml
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
