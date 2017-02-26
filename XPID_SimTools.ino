@@ -5,10 +5,10 @@ Original code from sirnoname and Wanegain
 */
 
 /*
-	   Input Data Format
+	   Input Data Format (SimTools 2.0)
 	   -----------------
 	   10 bits - binary
-	   XL<Axis1>CXR<Axis2>C
+	   XL<Axis1a>CXR<Axis2a>C
 	   XECCC - End
 
 	   Pin out of arduino MEGA for Sabertooth
@@ -49,14 +49,14 @@ Original code from sirnoname and Wanegain
 		 | [ ]A6                               |
 		 | [ ]A7                     TX3/14[ ] |   J1
 		 |                           RX3/15[ ] |   J0
-		 | [ ]A8                     TX2/16[ ] |   H1
+		 | [ ]A8                     TX2/16[ ] |   H1 -- DEBUG OUTPUT 115200/8/N/1
 		 | [ ]A9                     RX2/17[ ] |   H0
-		 | [ ]A10               TX1/INT3/18[ ] |   D3
+		 | [ ]A10               TX1/INT3/18[ ] |   D3 -- SABERTOOTH
 		 | [ ]A11               RX1/INT2/19[ ] |   D2
 		 | [ ]A12           I2C-SDA/INT1/20[ ] |   D1
 		 | [ ]A13           I2C-SCL/INT0/21[ ] |   D0
-		 | [ ]A14                              |
-		 | [ ]A15                              |   Ports:
+POT1 --	 | [ ]A14                              |
+POT2 --	 | [ ]A15                              |   Ports:
 		 |                RST SCK MISO         |    22=A0  23=A1
 		 |         ICSP   [ ] [ ] [ ]          |    24=A2  25=A3
 		 |                [ ] [ ] [ ]          |    26=A4  27=A5
@@ -79,7 +79,8 @@ Original code from sirnoname and Wanegain
 
 */
 
-#define DEBUG
+//#define DEBUG
+//#define ADAFRUITTFTTS // Uncomment this in case you are using Adafruit TFT
 #include <Sabertooth.h>
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD.h> // Hardware-specific library
@@ -100,7 +101,7 @@ Original code from sirnoname and Wanegain
 #define BYTELOW(v)   (*(((unsigned char *) (&v) + 1)))			//Write
 #define BYTEHIGH(v)  (*((unsigned char *) (&v)))
 
-int XPIDVersion = 317;
+int XPIDVersion = 320;
 int DeadZone = 0;
 int ReadAnalog = 0;
 
@@ -120,10 +121,18 @@ int TFTPin = 53;          // TFT toggle switch (GND)
 
 
 // These are the pins for the TFT Touchscreen shield
+#ifdef ADAFRUITTFTTS
+#define YP A3  // must be an analog pin, use "An" notation!
+#define XM A2  // must be an analog pin, use "An" notation!
+#define YM 9   // can be a digital pin
+#define XP 8   // can be a digital pin
+#else
 #define YP A1  // must be an analog pin, use "An" notation!
 #define XM A2  // must be an analog pin, use "An" notation!
 #define YM 7   // can be a digital pin
 #define XP 6   // can be a digital pin
+#endif
+
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
 int ts_xmin;
@@ -248,7 +257,6 @@ int addrts_xmin = EEPROM.getAddress(sizeof(ts_xmin));
 int addrts_xmax = EEPROM.getAddress(sizeof(ts_xmax));
 int addrts_ymin = EEPROM.getAddress(sizeof(ts_ymin));
 int addrts_ymax = EEPROM.getAddress(sizeof(ts_ymax));
-
 /*
 void DrawMotorRealTime(XPIDDCMotor M,int X,int Y) {
 	int step = 18;
@@ -264,8 +272,9 @@ void DrawMotorRealTime(XPIDDCMotor M,int X,int Y) {
 
 void setup()
 {
+	unsigned long start;
 	SimEngineSerialPort.begin(115200);// for connection to SimEngine through FTDI serial USB converter on arduino MEGA board at 115200
-	DebugSerial.begin(115200);// Start debug on TX3 pin
+	DebugSerial.begin(115200);// Start debug on Serial2 TX pin
   //  EEPROM.setMaxAllowedWrites(5);
 	ReadEEValues(); // Init vars from EEPROM. Will be kept in case of EEPROM upgrade
 	if (SabertoothType == 2) { //We are managing a sabertooth 2*32 which allows 115200 bps
@@ -276,6 +285,9 @@ void setup()
 		SabertoothSerialPort.begin(38400);
 		ST.autobaud(SabertoothSerialPort, true); //Needed so the sabertooth 2*25 is correctly configured
 	}
+	start = millis();
+	while (millis() - start < 2000) {
+	}
 	ST.motor(1, 0);
 	ST.motor(2, 0);
 	disable = 1;
@@ -283,32 +295,46 @@ void setup()
 	pinMode(EmergencyPin, INPUT_PULLUP);
 	PrintEEValues();
 	PrintValues();
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 	DebugSerial.print(F("EEPROM XPIDVERSION:")); DebugSerial.println(EEPROM.readInt(addrXPIDVersion));
 	DebugSerial.print(F("XPIDVERSION:")); DebugSerial.println(XPIDVersion);
+#endif
 	tft.reset();
 	uint16_t identifier = tft.readID();
 	if (identifier == 0x9325) {
-		Serial.println(F("Found ILI9325 LCD driver"));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+		DebugSerial.println(F("Found ILI9325 LCD driver"));
+#endif
 	}
 	else if (identifier == 0x9328) {
-		Serial.println(F("Found ILI9328 LCD driver"));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+		DebugSerial.println(F("Found ILI9328 LCD driver"));
+#endif
 	}
 	else if (identifier == 0x7575) {
-		Serial.println(F("Found HX8347G LCD driver"));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+		DebugSerial.println(F("Found HX8347G LCD driver"));
+#endif
 	}
 	else if (identifier == 0x9341) {
-		Serial.println(F("Found ILI9341 LCD driver"));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+		DebugSerial.println(F("Found ILI9341 LCD driver"));
+#endif
 	}
 	else if (identifier == 0x8357) {
-		Serial.println(F("Found HX8357D LCD driver"));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+		DebugSerial.println(F("Found HX8357D LCD driver"));
+#endif
 	}
 	else {
-		Serial.print(F("Unknown LCD driver chip: "));
-		Serial.println(identifier, HEX);
-		Serial.print(F("I try use ILI9341 LCD driver "));
-		Serial.println(F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
-		Serial.println(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
-		Serial.println(F("should appear in the library header (Adafruit_TFT.h)."));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+		DebugSerial.print(F("Unknown LCD driver chip: "));
+		DebugSerial.println(identifier, HEX);
+		DebugSerial.print(F("I try use ILI9341 LCD driver "));
+		DebugSerial.println(F("If using the Adafruit 2.8\" TFT Arduino shield, the line:"));
+		DebugSerial.println(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
+		DebugSerial.println(F("should appear in the library header (Adafruit_TFT.h)."));
+#endif
 		identifier = 0x9341;
 	}
 	tft.begin(identifier);
@@ -316,18 +342,25 @@ void setup()
 	tft.fillScreen(BLACK);
 	tft.fillRect(0, 0, 320, 240, BLACK);
 	if (EEPROM.readInt(addrXPIDVersion) != XPIDVersion) { // New XPIDVERSION detected. Align EEPROM config
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 		DebugSerial.println(F("EEPROM empty or layout changed. Updating it"));
+#endif
 		tft.setCursor(0, 10);
 		tft.setTextSize(2);
 		tft.print(F("Upgrade EEPROM"));
 		InitEEValues();
-		delay(1000);
-		tft.setCursor(0, 30);
+		PrintEEValues();
+		delay(1500);
+		tft.setCursor(0, 40);
 		tft.print("Done.");
-		delay(1000);
+		delay(1500);
+		tft.fillScreen(BLACK);
+		tft.fillRect(0, 0, 320, 240, BLACK);
 	}
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 	DebugSerial.println(F("EEPROM OK. Touch TFT to calibrate"));
-	unsigned long start;
+#endif
+	UpdateButtonPressed();
 	start = millis();
 	tft.setCursor(0, 10);
 	tft.setTextSize(2);
@@ -339,8 +372,10 @@ void setup()
 		touch = ts.getPoint();
 		if (touch.z > MINPRESSURE && touch.z < MAXPRESSURE) {
 			TFTcalibrate();
+			WriteEEValues();
 		}
 	}
+	UpdateButtonPressed();
 	tft.setRotation(0);
 	tft.fillScreen(BLACK);
 	tft.fillRect(0, 0, 320, 240, BLACK);
@@ -495,7 +530,7 @@ void loop()
 							tft.setCursor(5, 200);
 							tft.setTextColor(Buttons[i].textcol, Buttons[i].bgcol);tft.print(Buttons[i].Label);tft.print(F(":"));
 							M2.setStandby(TFTChangeValInt(M2.getStandby(), 1023, 0, 5, 60, 200, YELLOW, RED));
-							SetMotor(1, M2.getStandby());
+							SetMotor(2, M2.getStandby());
 							TFTRefreshM2();
 						}
 						/*
@@ -580,6 +615,8 @@ void loop()
 				page = 1;
 				tft.fillScreen(BLACK);
 				tft.fillRect(0, 0, 320, 240, BLACK);
+				tft.setTextColor(RED);
+				tft.setTextSize(1);tft.setCursor(220, 1);tft.print(XPIDVersion);
 				DrawButtons();
 				DrawMotorParams("Motor 1", M1, 10, 10);
 				DrawMotorParams("Motor 2", M2, 120, 10);
@@ -718,7 +755,6 @@ void TFTcalibrate() {
 	DebugSerial.print("ts_ymax= ");DebugSerial.println(ts_ymax);
 	DebugSerial.print("ts_ymin= ");DebugSerial.println(ts_ymin);
 #endif
-
 }
 
 boolean UpdateButtonPressed() {
@@ -733,7 +769,11 @@ boolean UpdateButtonPressed() {
 	digitalWrite(XP, HIGH);
 	if (touch.z > MINPRESSURE && touch.z < MAXPRESSURE) {
 		touch.x = map(touch.x, ts_xmin, ts_xmax, 0, 240);
+#ifdef ADAFRUITTFT
+		touch.y = map(touch.y, ts_ymin, ts_ymax, 320, 0);
+#else
 		touch.y = map(touch.y, ts_ymin, ts_ymax, 0, 320);
+#endif
 		//find button pressed
 		for (int i = 0; i < NUMBUTTONS;i++) {
 			if ((touch.x > Buttons[i].X) && (touch.x < Buttons[i].X + Buttons[i].width) && (touch.y > Buttons[i].Y) && (touch.y < Buttons[i].Y + Buttons[i].height)) {
@@ -759,9 +799,12 @@ void ClearButtonPressed() {
 
 void DrawButtons() {
 	for (int i = 4; i < NUMBUTTONS;i++) {//RED background for editable zone
+		//DebugSerial.print(F("Draw bckground button "));DebugSerial.println(i);
 		tft.fillRect(Buttons[i].X, Buttons[i].Y, Buttons[i].width, Buttons[i].height, RED);
+
 	}
 	for (int i = 0; i <4;i++) {
+		//DebugSerial.print(F("Draw button text "));DebugSerial.println(i);
 		tft.fillRoundRect(Buttons[i].X, Buttons[i].Y, Buttons[i].width, Buttons[i].height, 5, Buttons[i].bgcol);
 		//We center the text on the button, assuming a car is 20x20
 		tft.setTextSize(4);
@@ -873,65 +916,75 @@ int TFTChangeValInt(int val, int maxVal, int minVal, int stepVal, int X, int Y, 
 
 void InitEEValues() //Used to initialize variables and EEPROM content in case of new arduino, or updated EEPROM schema
 {
-	if (M1.getMax() <= 0 || M1.getMax() >1000) {
+	if (M1.getMax() <= 0 || M1.getMax() >1000 || isnan(M1.getMax())) {
 		M1.setMax (1021); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
 	}
-	if (M1.getMin() <= 0 || M1.getMin() >1000) {
+	if (M1.getMin() <= 0 || M1.getMin() >1000 || isnan(M1.getMin())) {
 		M1.setMin(1); // Minimum position of pot 1 to scale, do not use 0 because it cannot control outside the pot range
 	}
-	if (M2.getMax() <= 0 || M2.getMax() >1000) {
+	if (M2.getMax() <= 0 || M2.getMax() >1000 || isnan(M2.getMax())) {
 		M2.setMax(1021); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
 	}
-	if (M2.getMin() < 1 || M2.getMin() >1000 ) {
+	if (M2.getMin() < 1 || M2.getMin() >1000 || isnan(M2.getMin())) {
 		M2.setMin(1); // Minimum position of pot 1 to scale, do not use 0 because it cannot control outside the pot range
 	}
-	if (M1.getDeadzone() < 0 || M1.getDeadzone() > 10) {
+	if (M1.getDeadzone() < 0 || M1.getDeadzone() > 100 || isnan(M1.getDeadzone())) {
 		M1.setDeadZone(5); // +/- of this value will not move the motor
 	}
-	if (M2.getDeadzone() < 0 || M2.getDeadzone() > 10 ) {
+	if (M2.getDeadzone() < 0 || M2.getDeadzone() > 100 || isnan(M2.getDeadzone())) {
 		M2.setDeadZone(5); // +/- of this value will not move the motor
 	}
-	if (M1.getK() <= 0 || M1.getK() >= 5) {
+	if (M1.getK() <= 0 || M1.getK() >= 5 || isnan(M1.getK()) ) {
 		M1.setK(1);
 	}
-	if (M1.getP() <= 0 || M1.getP() >= 5) {
+	if (M1.getP() <= 0 || M1.getP() >= 5 || isnan(M1.getP())) {
 		M1.setP(1.000);
 	}
-	if (M1.getI() <= 0 || M1.getI() >= 5) {
+	if (M1.getI() <= 0 || M1.getI() >= 5 || isnan(M1.getI()) ) {
 		M1.setI(1.500);
 	}
-	if (M1.getD() <= 0 || M1.getD() >= 5) {
+	if (M1.getD() <= 0 || M1.getD() >= 5 || isnan(M1.getD())) {
 		M1.setD(0.300);
 	}
-	if (M2.getK() <= 0 || M2.getK() >= 5) {
+	if (M2.getK() <= 0 || M2.getK() >= 5 || isnan(M2.getK())) {
 		M2.setK(1);
 	}
-	if (M2.getP() <= 0 || M2.getP() >= 5) {
+	if (M2.getP() <= 0 || M2.getP() >= 5 || isnan(M2.getP())) {
 		M2.setP(1.000);
 	}
-	if (M2.getI() <= 0 || M2.getI() >= 10) {
+	if (M2.getI() <= 0 || M2.getI() >= 10 || isnan(M2.getI())) {
 		M2.setI(0.500);
 	}
-	if (M2.getD() <= 0 || M2.getD() >= 10) {
+	if (M2.getD() <= 0 || M2.getD() >= 10 || isnan(M2.getD())) {
 		M2.setD(0.300);
 	}
-	if (DeadZone <= 0 || DeadZone >= 50) {
+	if (DeadZone <= 0 || DeadZone >= 50 || isnan(DeadZone)) {
 		DeadZone = 4; //increase this value to reduce vibrations of motors
 	}
-	if (ReadAnalog <= 0 || ReadAnalog >= 8) {
+	if (ReadAnalog <= 0 || ReadAnalog >= 8 || isnan(ReadAnalog)) {
 		ReadAnalog = 8;
 	}
-	if (M1.getStandby() <= 0 || M1.getStandby() >= 1024 ) {
+	if (M1.getStandby() <= 0 || M1.getStandby() || isnan(M1.getStandby()) >= 1024 ) {
 		M1.setStandby(512);
 	}
-	if (M2.getStandby() <= 0 || M2.getStandby() >= 1024) {
+	if (M2.getStandby() <= 0 || M2.getStandby() || isnan(M2.getStandby()) >= 1024) {
 		M2.setStandby(512);
 	}
 	if (SabertoothType <= 0 || SabertoothType > 2) {
 		addrSabertoothType = 2;// sabertooth 2*25 =>1  sabertooth 2*32 =>2
 	}
-	ts_xmax = ts_ymax = 500;
-	ts_xmin = ts_ymin = 500;
+	if (ts_xmax <= 0 || ts_xmax >= 1024) {
+		ts_xmax = 1000;
+	}
+	if (ts_xmin <= 0 || ts_xmin >= 1024) {
+		ts_xmin = 0;
+	}
+	if (ts_ymax <= 0 || ts_ymax >= 1024) {
+		ts_ymax = 1000;
+	}
+	if (ts_ymin <= 0 || ts_ymin >= 1024) {
+		ts_ymin = 0;
+	}
 	WriteEEValues();
 }
 
@@ -940,12 +993,16 @@ void SetMotor(int motor, int position) {
 	int old_target;
 	unsigned long time = 0;
 	if (motor == 1) {
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 		DebugSerial.print(F("SetMotor1 pos: ")); DebugSerial.println(position);
+#endif
 		old_target = M1.getTarget ();// backup current target
 		M1.setTarget(position);
 	}
 	else {
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 		DebugSerial.print(F("SetMotor2 pos: ")); DebugSerial.println(position);
+#endif
 		old_target = M2.getTarget ();// backup current target
 		M2.setTarget(position);
 	}
@@ -965,7 +1022,9 @@ void SetMotor(int motor, int position) {
 
 
 void WriteEEValues() { // update EEPROM content with current variable
-	DebugSerial.print("Updating EEPROM data "); DebugSerial.print(EEPROM.readInt(addrXPIDVersion));
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
+	DebugSerial.print("Updating EEPROM data version "); DebugSerial.println(EEPROM.readInt(addrXPIDVersion));
+#endif
 	EEPROM.updateInt(addrXPIDVersion, XPIDVersion);
 	EEPROM.updateInt(addrFeedbackMax1, M1.getMax());
 	EEPROM.updateInt(addrFeedbackMax2, M2.getMax());
@@ -990,7 +1049,6 @@ void WriteEEValues() { // update EEPROM content with current variable
 	EEPROM.updateInt(addrts_xmin, ts_xmin);
 	EEPROM.updateInt(addrts_ymax, ts_ymax);
 	EEPROM.updateInt(addrts_ymin, ts_ymin);
-	DebugSerial.print(" to "); DebugSerial.println(EEPROM.readInt(addrXPIDVersion));
 }
 
 void ReadEEValues() { // update variables with content stored in EEPROM
@@ -1022,34 +1080,40 @@ void ReadEEValues() { // update variables with content stored in EEPROM
 }
 
 void PrintEEValues() {
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 	DebugSerial.println(F("--------------"));
 	DebugSerial.println(F("EEPROM Content"));
 	DebugSerial.println(F("--------------"));
-	DebugSerial.println(F("Var\t\t\t Address\tsize\tval"));
-	DebugSerial.print(F("EEInit\t\t\t")); DebugSerial.print(addrXPIDVersion); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(XPIDVersion)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrXPIDVersion)); DebugSerial.println("");
-	DebugSerial.print(F("M1.getMax()\t\t")); DebugSerial.print(addrFeedbackMax1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getMax())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMax1)); DebugSerial.println("");
-	DebugSerial.print(F("M1.getMin()\t\t")); DebugSerial.print(addrFeedbackMin1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getMin())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMin1)); DebugSerial.println("");
-	DebugSerial.print(F("M2.getMax()\t\t")); DebugSerial.print(addrFeedbackMax2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getMax())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMax2)); DebugSerial.println("");
-	DebugSerial.print(F("M2.getMin()\t\t")); DebugSerial.print(addrFeedbackMin2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getMin())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMin2)); DebugSerial.println("");
-	DebugSerial.print(F("FeedbackPotDeadZone1\t")); DebugSerial.print(addrFeedbackPotDeadZone1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getDeadzone())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackPotDeadZone1)); DebugSerial.println("");
-	DebugSerial.print(F("FeedbackPotDeadZone2\t")); DebugSerial.print(addrFeedbackPotDeadZone2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getDeadzone())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackPotDeadZone2)); DebugSerial.println("");
-	DebugSerial.print(F("M1.getK()\t\t")); DebugSerial.print(addrK_motor_1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getK())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrK_motor_1)); DebugSerial.println("");
-	DebugSerial.print(F("proportional1\t\t")); DebugSerial.print(addrproportional1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getP())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrproportional1)); DebugSerial.println("");
-	DebugSerial.print(F("integral1\t\t")); DebugSerial.print(addrintegral1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getI())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrintegral1)); DebugSerial.println("");
-	DebugSerial.print(F("derivative1\t\t")); DebugSerial.print(addrderivative1); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M1.getD())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrderivative1)); DebugSerial.println("");
-	DebugSerial.print(F("M1 Stdby\t\t")); DebugSerial.print(addrMotor1STDBY); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(addrMotor1STDBY)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrMotor1STDBY)); DebugSerial.println("");
-	DebugSerial.print(F("M2.getK()\t\t")); DebugSerial.print(addrK_motor_2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getK())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrK_motor_1)); DebugSerial.println("");
-	DebugSerial.print(F("proportional2\t\t")); DebugSerial.print(addrproportional2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getP())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrproportional2)); DebugSerial.println("");
-	DebugSerial.print(F("integral2\t\t")); DebugSerial.print(addrintegral2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getI())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrintegral2)); DebugSerial.println("");
-	DebugSerial.print(F("derivative2\t\t")); DebugSerial.print(addrderivative2); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(M2.getD())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrderivative2)); DebugSerial.println("");
-	DebugSerial.print(F("M2 Stdby\t\t")); DebugSerial.print(addrMotor2STDBY); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(addrMotor2STDBY)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrMotor2STDBY)); DebugSerial.println("");
-	DebugSerial.print(F("DeadZone\t\t")); DebugSerial.print(addrDeadZone); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(DeadZone)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrDeadZone)); DebugSerial.println("");
-	DebugSerial.print(F("ReadAnalog\t\t")); DebugSerial.print(addrReadAnalog); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(ReadAnalog)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrReadAnalog)); DebugSerial.println("");
-	DebugSerial.print(F("SabertoothType\t\t")); DebugSerial.print(addrSabertoothType); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(SabertoothType)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrSabertoothType)); DebugSerial.println("");
-	DebugSerial.print(F("Touch Xmax\t\t")); DebugSerial.print(addrts_xmax); DebugSerial.print("\t\t"); DebugSerial.print(sizeof(ts_xmax)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrts_xmax)); DebugSerial.println("");
+	DebugSerial.println(F("Var\t\tAddress\tsize\tval"));
+	DebugSerial.print(F("EEInit\t\t")); DebugSerial.print(addrXPIDVersion); DebugSerial.print("\t"); DebugSerial.print(sizeof(XPIDVersion)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrXPIDVersion)); DebugSerial.println("");
+	DebugSerial.print(F("M1.getMax\t")); DebugSerial.print(addrFeedbackMax1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getMax())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMax1)); DebugSerial.println("");
+	DebugSerial.print(F("M1.getMin\t")); DebugSerial.print(addrFeedbackMin1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getMin())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMin1)); DebugSerial.println("");
+	DebugSerial.print(F("M1.DeadZone\t")); DebugSerial.print(addrFeedbackPotDeadZone1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getDeadzone())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackPotDeadZone1)); DebugSerial.println("");
+	DebugSerial.print(F("M2.getMax\t")); DebugSerial.print(addrFeedbackMax2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getMax())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMax2)); DebugSerial.println("");
+	DebugSerial.print(F("M2.getMin\t")); DebugSerial.print(addrFeedbackMin2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getMin())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackMin2)); DebugSerial.println("");
+	DebugSerial.print(F("M2.DeadZone\t")); DebugSerial.print(addrFeedbackPotDeadZone2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getDeadzone())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrFeedbackPotDeadZone2)); DebugSerial.println("");
+	DebugSerial.print(F("M1.K\t\t")); DebugSerial.print(addrK_motor_1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getK())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrK_motor_1)); DebugSerial.println("");
+	DebugSerial.print(F("M1.P\t\t")); DebugSerial.print(addrproportional1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getP())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrproportional1)); DebugSerial.println("");
+	DebugSerial.print(F("M1.I\t\t")); DebugSerial.print(addrintegral1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getI())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrintegral1)); DebugSerial.println("");
+	DebugSerial.print(F("M1.D\t\t")); DebugSerial.print(addrderivative1); DebugSerial.print("\t"); DebugSerial.print(sizeof(M1.getD())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrderivative1)); DebugSerial.println("");
+	DebugSerial.print(F("M1.Stdby\t")); DebugSerial.print(addrMotor1STDBY); DebugSerial.print("\t"); DebugSerial.print(sizeof(addrMotor1STDBY)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrMotor1STDBY)); DebugSerial.println("");
+	DebugSerial.print(F("M2.K\t\t")); DebugSerial.print(addrK_motor_2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getK())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrK_motor_1)); DebugSerial.println("");
+	DebugSerial.print(F("M2.P\t\t")); DebugSerial.print(addrproportional2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getP())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrproportional2)); DebugSerial.println("");
+	DebugSerial.print(F("M2.I\t\t")); DebugSerial.print(addrintegral2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getI())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrintegral2)); DebugSerial.println("");
+	DebugSerial.print(F("M2.D\t\t")); DebugSerial.print(addrderivative2); DebugSerial.print("\t"); DebugSerial.print(sizeof(M2.getD())); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readDouble(addrderivative2)); DebugSerial.println("");
+	DebugSerial.print(F("M2.Stdby\t")); DebugSerial.print(addrMotor2STDBY); DebugSerial.print("\t"); DebugSerial.print(sizeof(addrMotor2STDBY)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrMotor2STDBY)); DebugSerial.println("");
+	DebugSerial.print(F("DeadZone\t")); DebugSerial.print(addrDeadZone); DebugSerial.print("\t"); DebugSerial.print(sizeof(DeadZone)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrDeadZone)); DebugSerial.println("");
+	DebugSerial.print(F("ReadAnalog\t")); DebugSerial.print(addrReadAnalog); DebugSerial.print("\t"); DebugSerial.print(sizeof(ReadAnalog)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrReadAnalog)); DebugSerial.println("");
+	DebugSerial.print(F("SabertoothType\t")); DebugSerial.print(addrSabertoothType); DebugSerial.print("\t"); DebugSerial.print(sizeof(SabertoothType)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrSabertoothType)); DebugSerial.println("");
+	DebugSerial.print(F("Touch Xmax\t")); DebugSerial.print(addrts_xmax); DebugSerial.print("\t"); DebugSerial.print(sizeof(ts_xmax)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrts_xmax)); DebugSerial.println("");
+	DebugSerial.print(F("Touch Xmin\t")); DebugSerial.print(addrts_xmin); DebugSerial.print("\t"); DebugSerial.print(sizeof(ts_xmin)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrts_xmin)); DebugSerial.println("");
+	DebugSerial.print(F("Touch Ymax\t")); DebugSerial.print(addrts_ymax); DebugSerial.print("\t"); DebugSerial.print(sizeof(ts_ymax)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrts_ymax)); DebugSerial.println("");
+	DebugSerial.print(F("Touch Ymin\t")); DebugSerial.print(addrts_ymin); DebugSerial.print("\t"); DebugSerial.print(sizeof(ts_ymin)); DebugSerial.print("\t"); DebugSerial.print(EEPROM.readInt(addrts_ymin)); DebugSerial.println("");
+#endif
 }
 
 void PrintValues() {
+#if (defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)) || defined DEBUG
 	DebugSerial.println(F("------------"));
 	DebugSerial.println(F("Current Vars"));
 	DebugSerial.println(F("------------"));
@@ -1076,5 +1140,6 @@ void PrintValues() {
 	DebugSerial.print(F("Tscreen xmin\t\t")); DebugSerial.print(ts_xmin); DebugSerial.println("");
 	DebugSerial.print(F("Tscreen ymax\t\t")); DebugSerial.print(ts_ymax); DebugSerial.println("");
 	DebugSerial.print(F("Tscreen ymin\t\t")); DebugSerial.print(ts_ymin); DebugSerial.println("");
+#endif
 }
 
