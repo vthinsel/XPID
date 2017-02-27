@@ -769,7 +769,7 @@ boolean UpdateButtonPressed() {
 	digitalWrite(XP, HIGH);
 	if (touch.z > MINPRESSURE && touch.z < MAXPRESSURE) {
 		touch.x = map(touch.x, ts_xmin, ts_xmax, 0, 240);
-#ifdef ADAFRUITTFT
+#ifdef ADAFRUITTFTTS
 		touch.y = map(touch.y, ts_ymin, ts_ymax, 320, 0);
 #else
 		touch.y = map(touch.y, ts_ymin, ts_ymax, 0, 320);
@@ -916,16 +916,16 @@ int TFTChangeValInt(int val, int maxVal, int minVal, int stepVal, int X, int Y, 
 
 void InitEEValues() //Used to initialize variables and EEPROM content in case of new arduino, or updated EEPROM schema
 {
-	if (M1.getMax() <= 0 || M1.getMax() >1000 || isnan(M1.getMax())) {
-		M1.setMax (1021); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
+	if (M1.getMax() <= 0 || M1.getMax() >=1023 || isnan(M1.getMax())) {
+		M1.setMax (1022); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
 	}
-	if (M1.getMin() <= 0 || M1.getMin() >1000 || isnan(M1.getMin())) {
+	if (M1.getMin() <= 0 || M1.getMin() >500 || isnan(M1.getMin())) {
 		M1.setMin(1); // Minimum position of pot 1 to scale, do not use 0 because it cannot control outside the pot range
 	}
-	if (M2.getMax() <= 0 || M2.getMax() >1000 || isnan(M2.getMax())) {
-		M2.setMax(1021); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
+	if (M2.getMax() <= 0 || M2.getMax() >= 1023 || isnan(M2.getMax())) {
+		M2.setMax(1022); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
 	}
-	if (M2.getMin() < 1 || M2.getMin() >1000 || isnan(M2.getMin())) {
+	if (M2.getMin() <= 0 || M2.getMin() >500 || isnan(M2.getMin())) {
 		M2.setMin(1); // Minimum position of pot 1 to scale, do not use 0 because it cannot control outside the pot range
 	}
 	if (M1.getDeadzone() < 0 || M1.getDeadzone() > 100 || isnan(M1.getDeadzone())) {
