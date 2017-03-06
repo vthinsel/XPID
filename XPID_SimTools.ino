@@ -477,7 +477,7 @@ void loop()
 						if (Buttons[i].Label == "STB1") {
 							tft.setCursor(5, 200);
 							tft.setTextColor(Buttons[i].textcol, Buttons[i].bgcol);tft.print(Buttons[i].Label);tft.print(F(":"));
-							M1.setStandby(TFTChangeValInt(M1.getStandby(), 1023, 0, 5, 60, 200, YELLOW, RED));
+							M1.setStandby(TFTChangeValInt(M1.getStandby(), 1023, 0, 1, 60, 200, YELLOW, RED));
 							SetMotor(1, M1.getStandby());
 							TFTRefreshM1();
 						}
@@ -529,7 +529,7 @@ void loop()
 						if (Buttons[i].Label == "STB2") {
 							tft.setCursor(5, 200);
 							tft.setTextColor(Buttons[i].textcol, Buttons[i].bgcol);tft.print(Buttons[i].Label);tft.print(F(":"));
-							M2.setStandby(TFTChangeValInt(M2.getStandby(), 1023, 0, 5, 60, 200, YELLOW, RED));
+							M2.setStandby(TFTChangeValInt(M2.getStandby(), 1023, 0, 1, 60, 200, YELLOW, RED));
 							SetMotor(2, M2.getStandby());
 							TFTRefreshM2();
 						}
@@ -877,13 +877,13 @@ int TFTChangeValInt(int val, int maxVal, int minVal, int stepVal, int X, int Y, 
 
 void InitEEValues() //Used to initialize variables and EEPROM content in case of new arduino, or updated EEPROM schema
 {
-	if (M1.getMax() <= 0 || M1.getMax() >=1023 || isnan(M1.getMax())) {
+	if (M1.getMax() <= 500 || M1.getMax() >=1023 || isnan(M1.getMax())) {
 		M1.setMax (1022); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
 	}
 	if (M1.getMin() <= 0 || M1.getMin() >500 || isnan(M1.getMin())) {
 		M1.setMin(1); // Minimum position of pot 1 to scale, do not use 0 because it cannot control outside the pot range
 	}
-	if (M2.getMax() <= 0 || M2.getMax() >= 1023 || isnan(M2.getMax())) {
+	if (M2.getMax() <= 500 || M2.getMax() >= 1023 || isnan(M2.getMax())) {
 		M2.setMax(1022); // Maximum position of pot 1 to scale, do not use 1023 because it cannot control outside the pot range
 	}
 	if (M2.getMin() <= 0 || M2.getMin() >500 || isnan(M2.getMin())) {
@@ -913,10 +913,10 @@ void InitEEValues() //Used to initialize variables and EEPROM content in case of
 	if (M2.getP() <= 0 || M2.getP() >= 5 || isnan(M2.getP())) {
 		M2.setP(1.000);
 	}
-	if (M2.getI() <= 0 || M2.getI() >= 10 || isnan(M2.getI())) {
+	if (M2.getI() <= 0 || M2.getI() >= 5 || isnan(M2.getI())) {
 		M2.setI(0.500);
 	}
-	if (M2.getD() <= 0 || M2.getD() >= 10 || isnan(M2.getD())) {
+	if (M2.getD() <= 0 || M2.getD() >= 5 || isnan(M2.getD())) {
 		M2.setD(0.300);
 	}
 	if (DeadZone <= 0 || DeadZone >= 50 || isnan(DeadZone)) {
