@@ -516,14 +516,14 @@ void loop()
 							tft.setCursor(5, 200);
 							tft.setTextColor(Buttons[i].textcol, Buttons[i].bgcol);tft.print(Buttons[i].Label);tft.print(F(":"));
 							M2.setMax(TFTChangeValInt(M2.getMax(), 1023, 0, 1, 60, 200, YELLOW, RED));
-							SetMotor(1, M2.getMax());
+							SetMotor(2, M2.getMax());
 							TFTRefreshM2();
 						}
 						if (Buttons[i].Label == "MIN2") {
 							tft.setCursor(5, 200);
 							tft.setTextColor(Buttons[i].textcol, Buttons[i].bgcol);tft.print(Buttons[i].Label);tft.print(F(":"));
 							M2.setMin(TFTChangeValInt(M2.getMin(), 1023, 0, 1, 60, 200, YELLOW, RED));
-							SetMotor(1, M2.getMin());
+							SetMotor(2, M2.getMin());
 							TFTRefreshM2();
 						}
 						if (Buttons[i].Label == "STB2") {
@@ -533,45 +533,6 @@ void loop()
 							SetMotor(2, M2.getStandby());
 							TFTRefreshM2();
 						}
-						/*
-						if (used.item == menu_readanalog)
-						{
-							ReadAnalog = LCDChangeValInt(ReadAnalog, 16, 1, 1);
-							WriteEEValues();
-							menu.moveRight();
-						}
-						if (used.item == menu_reset_EEPROM)
-						{
-							M1.setK(1);
-							M1.setP(2);
-							M1.setI(0.5);
-							M1.setD(0.3);
-							M1.setMax (1023);
-							M1.setMin(1);
-							M1.setDeadZone(0);		// +/- of this value will not move the motor
-							M2.setK(1);
-							M2.setP(2);
-							M2.setI(0.5);
-							M2.setD(0.3);
-							M2.setMax(1023);
-							M2.setMin(1);
-							M2.setDeadZone(0);		// +/- of this value will not move the motor
-							DeadZone = 4; //increase this value to reduce vibrations of motors
-							ReadAnalog = 8;
-							M1.setStandby(512);
-							M2.setStandby(512);
-							SabertoothType = 2;// sabertooth 2*25 =>1  sabertooth 2*32 =>2
-							WriteEEValues();
-							PrintEEValues();
-							PrintValues();
-						}
-						if (used.item == menu_Sabertooth)
-						{
-							SabertoothType = LCDChangeValInt(SabertoothType, 2, 1, 1); //1=2.25 2=2.32
-							WriteEEValues();
-							menu.moveRight();
-						}
-						*/
 					}
 				}
 			ClearButtonPressed();
