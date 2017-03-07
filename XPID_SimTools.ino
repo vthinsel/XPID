@@ -391,6 +391,7 @@ void setup()
 	DrawMotorParams("Motor 2", M2, 120, 10);
 	//DrawMotorRealTime(M1, 10, 10);
 	//DrawMotorRealTime(M2, 120, 10);
+	GoToStandby();
 }
 
 
@@ -667,25 +668,29 @@ void ParseCommand()
 	}
 	if (commandbuffer[0] == 'E')		//Disable power on both motor, go to standby value
 	{
-		unsigned long start;
-		unsigned long time;
-		start = millis();
-		M1.setTarget(M1.getStandby());
-		M2.setTarget(M2.getStandby());
-		time = millis();
-		disable = 0;
-		while (time < (start + 3000)) //3s
-		{
-			FeedbackPotWorker();
-			SetPWM();
-			time = millis();
-		}
-		ST.motor(1, 0);
-		ST.motor(2, 0);
-		ST.stop();
-		disable = 1;
+		GoToStandby();
 		return;
 	}
+}
+
+void GoToStandby() {
+	unsigned long start;
+	unsigned long time;
+	start = millis();
+	M1.setTarget(M1.getStandby());
+	M2.setTarget(M2.getStandby());
+	time = millis();
+	disable = 0;
+	while (time < (start + 3000)) //3s
+	{
+		FeedbackPotWorker();
+		SetPWM();
+		time = millis();
+	}
+	ST.motor(1, 0);
+	ST.motor(2, 0);
+	ST.stop();
+	disable = 1;
 }
 
 void TFTcalibrate() {
