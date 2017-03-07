@@ -6,7 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.zip
+_*.zip
 *.7[zZ]
 ms-persist.xml
 
